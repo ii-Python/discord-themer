@@ -24,12 +24,12 @@ class ThemeManager {
             this.validate_manifest(manifest);
 
             // Give the author a choice of CSS entry, or use theme.css
-            const css_file = manifest.css_entry || join(theme_folder, "theme.css");
+            const css_file = join(theme_folder, manifest.css_entry || "theme.css");
             if (!existsSync(css_file)) throw new Error("invalid css file or none exists");
 
             // Save internally
             this.themes[tid] = { manifest: manifest, css_file: css_file, active: existsSync(join(theme_folder, ".active")) }
-        } catch (e) { return this.core.log("ThemeLoader", `failed loading ${tid} manifest!`); }
+        } catch (e) { return this.core.log(`ThemeLoader: failed loading ${tid} manifest:\n${e}`); }
     }
     async load_themes(activate) {
         for (const fn of readdirSync(this.theme_dir)) {
@@ -41,7 +41,12 @@ class ThemeManager {
         if (activate) this.activate_themes();
     }
     async activate_themes() {
-        for (const tid in this.themes) if (this.themes[tid].active) loadCSSFile(this.themes[tid].css_file, tid);
+        for (const tid in this.themes) {
+            if (this.themes[tid].active) {
+                this.core.log(`ThemeLoader: loading ${tid} ...`)
+                loadCSSFile(this.themes[tid].css_file, tid);
+            }
+        }
     }
 }
 
